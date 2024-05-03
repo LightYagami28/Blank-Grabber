@@ -28,7 +28,7 @@ echo Checking 'pyaes' (3/4)
 python -c "import pyaes" > nul 2>&1
 if %errorlevel% neq 0 (
     echo Installing pyaes...
-    python -m pip install pyaesm > nul
+    python -m pip install pyaes > nul
 )
 
 echo Checking 'urllib3' (4/4)
@@ -45,5 +45,6 @@ if %errorlevel% neq 0 goto ERROR
 exit
 
 :ERROR
-color 4 && title [Error]
+color 4
+title [Error]
 pause > nul

@@ -1,20 +1,23 @@
-# If you want to use this in your project (with or without modifications, please give credits)
-# https://github.com/Blank-c/BlankOBF
-
-import random, string, base64, codecs, argparse, os, sys
+import random
+import string
+import base64
+import codecs
+import argparse
+import os
+import sys
+import lzma
 
 from textwrap import wrap
-from lzma import compress
 from marshal import dumps
 
-def printerr(data):
-    print(data, file= sys.stderr)
+def print_error(data):
+    print(data, file=sys.stderr)
 
 class BlankOBF:
-    def __init__(self, code, outputpath):
+    def __init__(self, code, output_path):
         self.code = code.encode()
-        self.outpath = outputpath
-        self.varlen = 3
+        self.out_path = output_path
+        self.var_len = 3
         self.vars = {}
 
         self.marshal()
@@ -26,47 +29,47 @@ class BlankOBF:
     def generate(self, name):
         res = self.vars.get(name)
         if res is None:
-            res = "_" + "".join(["_" for _ in range(self.varlen)])
-            self.varlen += 1
+            res = "_" + "".join(["_" for _ in range(self.var_len)])
+            self.var_len += 1
             self.vars[name] = res
         return res
     
-    def encryptstring(self, string, config= {}, func= False):
+    def encrypt_string(self, string, config={}, func=False):
         b64 = list(b"base64")
         b64decode = list(b"b64decode")
         __import__ = config.get("__import__", "__import__")
         getattr = config.get("getattr", "getattr")
-        bytes = config.get("bytes", "bytes")
-        eval = config.get("eval", "eval")
+        bytes_ = config.get("bytes", "bytes")
+        eval_ = config.get("eval", "eval")
         if not func:
-            return f'{getattr}({__import__}({bytes}({b64}).decode()), {bytes}({b64decode}).decode())({bytes}({list(base64.b64encode(string.encode()))})).decode()'
+            return f'{getattr}({__import__}({bytes_}({b64}).decode()), {bytes_}({b64decode}).decode())({bytes_}({list(base64.b64encode(string.encode()))})).decode()'
         else:
             attrs = string.split(".")
-            base = self.encryptstring(attrs[0], config)
-            attrs = list(map(lambda x: self.encryptstring(x, config, False), attrs[1:]))
-            newattr = ""
+            base = self.encrypt_string(attrs[0], config)
+            attrs = list(map(lambda x: self.encrypt_string(x, config, False), attrs[1:]))
+            new_attr = ""
             for i, val in enumerate(attrs):
                 if i == 0:
-                    newattr = f'{getattr}({eval}({base}), {val})'
+                    new_attr = f'{getattr}({eval_}({base}), {val})'
                 else:
-                    newattr = f'{getattr}({newattr}, {val})'
-            return newattr
+                    new_attr = f'{getattr}({new_attr}, {val})'
+            return new_attr
             
     def encryptor(self, config):
-        def func_(string, func= False):
-            return self.encryptstring(string, config, func)
+        def func_(string, func=False):
+            return self.encrypt_string(string, config, func)
         return func_
     
     def compress(self):
-        self.code = compress(self.code)
+        self.code = lzma.compress(self.code)
     
     def marshal(self):
         self.code = dumps(compile(self.code, "<string>", "exec"))
     
     def encrypt1(self):
         code = base64.b64encode(self.code).decode()
-        partlen = int(len(code)/4)
-        code = wrap(code, partlen)
+        part_len = int(len(code) / 4)
+        code = wrap(code, part_len)
         var1 = self.generate("a")
         var2 = self.generate("b")
         var3 = self.generate("c")
@@ -77,7 +80,7 @@ class BlankOBF:
         init = ";".join(init)
         self.code = f'''
 # Obfuscated using https://github.com/Blank-c/BlankOBF
-{init};__import__({self.encryptstring("builtins")}).exec(__import__({self.encryptstring("marshal")}).loads(__import__({self.encryptstring("base64")}).b64decode(__import__({self.encryptstring("codecs")}).decode({var1}, __import__({self.encryptstring("base64")}).b64decode("{base64.b64encode(b'rot13').decode()}").decode())+{var2}+{var3}[::-1]+{var4})))
+{init};__import__({self.encrypt_string("builtins")}).exec(__import__({self.encrypt_string("marshal")}).loads(__import__({self.encrypt_string("base64")}).b64decode(__import__({self.encrypt_string("codecs")}).decode({var1}, __import__({self.encrypt_string("base64")}).b64decode("{base64.b64encode(b'rot13').decode()}").decode())+{var2}+{var3}[::-1]+{var4})))
 '''.strip().encode()
     
     def encrypt2(self):
@@ -93,19 +96,19 @@ class BlankOBF:
         var9 = self.generate("m")
 
         conf = {
-            "getattr" : var4,
-            "eval" : var3,
-            "__import__" : var8,
-            "bytes" : var9
+            "getattr": var4,
+            "eval": var3,
+            "__import__": var8,
+            "bytes": var9
         }
-        encryptstring = self.encryptor(conf)
+        encrypt_string = self.encryptor(conf)
         
         self.code = f'''# Obfuscated using https://github.com/Blank-c/BlankOBF
-{var3} = eval({self.encryptstring("eval")});{var4} = {var3}({self.encryptstring("getattr")});{var8} = {var3}({self.encryptstring("__import__")});{var9} = {var3}({self.encryptstring("bytes")});{var5} = lambda {var7}: {var3}({encryptstring("compile")})({var7}, {encryptstring("<string>")}, {encryptstring("exec")});{var1} = {self.code}
-{var2} = {encryptstring('__import__("builtins").list', func= True)}({var1})
+{var3} = eval({self.encrypt_string("eval")});{var4} = {var3}({self.encrypt_string("getattr")});{var8} = {var3}({self.encrypt_string("__import__")});{var9} = {var3}({self.encrypt_string("bytes")});{var5} = lambda {var7}: {var3}({encrypt_string("compile")})({var7}, {encrypt_string("<string>")}, {encrypt_string("exec")});{var1} = {self.code}
+{var2} = {encrypt_string('__import__("builtins").list', func=True)}({var1})
 try:
-    {encryptstring('__import__("builtins").exec', func= True)}({var5}({encryptstring('__import__("lzma").decompress', func= True)}({var9}({var2})))) or {encryptstring('__import__("os")._exit', func= True)}(0)
-except {encryptstring('__import__("lzma").LZMAError', func= True)}:...
+    {encrypt_string('__import__("builtins").exec', func=True)}({var5}({encrypt_string('__import__("lzma").decompress', func=True)}({var9}({var2})))) or {encrypt_string('__import__("os")._exit', func=True)}(0)
+except {encrypt_string('__import__("lzma").LZMAError', func=True)}:...
 '''.strip().encode()
 
     def encrypt3(self):
@@ -114,29 +117,29 @@ except {encryptstring('__import__("lzma").LZMAError', func= True)}:...
         self.code = f'# Obfuscated using https://github.com/Blank-c/BlankOBF\n\nimport base64, lzma; exec(compile(lzma.decompress(base64.b64decode({data})), "<string>", "exec"))'.encode()
 
     def finalize(self):
-        if os.path.dirname(self.outpath).strip() != "":
-            os.makedirs(os.path.dirname(self.outpath), exist_ok= True)
-        with open(self.outpath, "w") as e:
+        if os.path.dirname(self.out_path).strip() != "":
+            os.makedirs(os.path.dirname(self.out_path), exist_ok=True)
+        with open(self.out_path, "w") as e:
             e.write(self.code.decode())
-        # print("Saved as --> " + os.path.realpath(self.outpath))
+        # print("Saved as --> " + os.path.realpath(self.out_path))
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog= sys.argv[0], description= "Obfuscates python program to make it harder to read")
-    parser.add_argument("FILE", help= "Path to the file containing the python code")
-    parser.add_argument("-o", type= str, help= 'Output file path [Default: "Obfuscated_<FILE>.py"]', dest= "path")
+    parser = argparse.ArgumentParser(prog=sys.argv[0], description="Obfuscates python program to make it harder to read")
+    parser.add_argument("FILE", help="Path to the file containing the python code")
+    parser.add_argument("-o", type=str, help='Output file path [Default: "Obfuscated_<FILE>.py"]', dest="path")
     args = parser.parse_args()
 
-    if not os.path.isfile(sourcefile := args.FILE):
-        printerr(f'No such file: "{args.FILE}"')
+    if not os.path.isfile(source_file := args.FILE):
+        print_error(f'No such file: "{args.FILE}"')
         os._exit(1)
-    elif not sourcefile.endswith((".py", ".pyw")):
-        printerr('The file does not have a valid python script extention!')
+    elif not source_file.endswith((".py", ".pyw")):
+        print_error('The file does not have a valid python script extension!')
         os._exit(1)
     
     if args.path is None:
-        args.path = "Obfuscated_" + os.path.basename(sourcefile)
+        args.path = "Obfuscated_" + os.path.basename(source_file)
     
-    with open(sourcefile) as sourcefile:
-        code = sourcefile.read()
+    with open(source_file) as source_file:
+        code = source_file.read()
     
     BlankOBF(code, args.path)

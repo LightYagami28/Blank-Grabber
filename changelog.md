@@ -1,4 +1,17 @@
 # Changelog
+
+### 03/05/2024
+
+* Renamed the function printerr to print_error to follow Python naming conventions.
+* Changed the class and function names to use snake_case for consistency.
+* Updated the imports to be more organized and grouped together.
+* Used str.endswith() instead of manually checking the file extension.
+* Replaced uses of os._exit() with sys.exit().
+* Updated os.makedirs() to use the exist_ok parameter instead of checking directory existence manually.
+* Made small improvements to variable names and formatting for clarity and readability.
+* Updated method and variable names to use snake_case instead of camelCase for consistency with Python naming  
+conventions.
+
 ### 27/08/2023
 * Fixed Battle.Net not working for some users.
 * Update readme.md to reflect new Telegram URL (https://t.me/BlankGrabber)
